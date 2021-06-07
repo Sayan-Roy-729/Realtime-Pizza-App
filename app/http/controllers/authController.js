@@ -78,7 +78,9 @@ exports.postLogin = (req, res, next) => {
                 req.flash("error", info.message);
                 return next(err);
             }
-            return res.redirect("/");
+            return res.redirect(
+                req.user.role === "admin" ? "/admin/orders" : "/"
+            );
         });
     })(req, res, next);
 };
