@@ -1,4 +1,5 @@
 const path = require("path");
+const Emitter = require("events");
 const express = require("express");
 const expressLayout = require("express-ejs-layouts");
 const mongoose = require("mongoose");
@@ -6,9 +7,9 @@ const session = require("express-session");
 const env = require("dotenv");
 const flash = require("express-flash");
 const MongoDbStore = require("connect-mongo");
-const passport = require('passport');
+const passport = require("passport");
 
-const passportInit = require('./app/config/passport');
+const passportInit = require("./app/config/passport");
 
 const app = express();
 
@@ -39,6 +40,10 @@ connection
 //     mongooseConnection: connection,
 //     collection: "sessions",
 // });
+
+// Event emitter
+const eventEmitter = new Emitter();
+app.set("eventEmitter", eventEmitter);
 
 // Session config
 app.use(
@@ -78,6 +83,28 @@ app.use((req, res, next) => {
 app.use("/", require("./routes/web"));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Listening on port ${PORT}`);
+});
+
+// Socket
+const io = require("socket.io")(server);
+// Setup the connection
+io.on("connection", (socket) => {
+    // If Joined, then there will be unique connection id
+    console.log(socket.id);
+
+    // After the connection, join with the specific room
+    socket.on("join", (roomName) => {
+        console.log(roomName);
+        socket.join(roomName);
+    });
+});
+
+eventEmitter.on("orderUpdated", (data) => {
+    io.to(`order_${data.id}`).emit("order", data);
+});
+
+eventEmitter.on('orderPlaced', (data) => {
+    io.to('adminRoom').emit('orderPlaced', data);
 });
