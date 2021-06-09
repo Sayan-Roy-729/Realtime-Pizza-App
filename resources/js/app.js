@@ -3,6 +3,7 @@ import moment from "moment";
 import Noty from "noty";
 
 import initAdmin from "./admin";
+import initStripe from './stripe';
 
 const addToCart = document.querySelectorAll(".add-to-cart");
 const cartCounter = document.querySelector("#cartCounter");
@@ -48,16 +49,14 @@ if (alertMsg) {
     }, 2000);
 }
 
-
-
 // Change order status
 let statuses = document.querySelectorAll(".status_line");
 let time = document.createElement("small");
 
 const updateStatus = (order) => {
     statuses.forEach((status) => {
-        status.classList.remove('step-completed');
-        status.classList.remove('current');
+        status.classList.remove("step-completed");
+        status.classList.remove("current");
     });
 
     let stepCompleted = true;
@@ -81,6 +80,8 @@ const hiddenInput = document.querySelector("#hiddenInput");
 const order = hiddenInput ? JSON.parse(hiddenInput.value) : null;
 updateStatus(order);
 
+initStripe();
+
 // Socket
 let socket = io();
 // Join
@@ -89,10 +90,10 @@ if (order) {
 }
 
 let adminAreaPath = window.location.pathname;
-if (adminAreaPath.includes('admin')) {
+if (adminAreaPath.includes("admin")) {
     initAdmin(socket);
-    socket.emit('join', 'adminRoom');
-} 
+    socket.emit("join", "adminRoom");
+}
 
 socket.on("order", (data) => {
     const updatedOrder = { ...order };
@@ -101,9 +102,9 @@ socket.on("order", (data) => {
     updateStatus(updatedOrder);
 
     new Noty({
-        type: 'success',
+        type: "success",
         timeout: 1000,
-        text: 'Order updated',
+        text: "Order updated",
         progressBar: false,
     }).show();
 });
